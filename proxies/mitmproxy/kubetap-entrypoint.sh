@@ -52,8 +52,8 @@ WRAPPER_EOF
     chmod +x /usr/local/bin/shell-wrapper.sh
     
     # Keep the container running - sleep indefinitely
-    # This allows users to attach via: kubectl exec -it <pod> -- tmux attach-session -t mitmproxy
-    # or just: kubectl exec -it <pod> -- bash
+    # Kubernetes liveness probe will monitor if mitmproxy is still listening on port 7777
+    # If it dies, the container will be restarted
     echo "Container keeping alive with sleep infinity" >&2
     sleep infinity
   else

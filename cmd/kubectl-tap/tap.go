@@ -14,13 +14,11 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
-	"net/url"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"strings"
@@ -38,8 +36,6 @@ import (
 	appsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/portforward"
-	"k8s.io/client-go/transport/spdy"
 	"k8s.io/client-go/util/retry"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -351,11 +347,7 @@ func NewTapCommand(client kubernetes.Interface, config *rest.Config, viper *vipe
 		}
 
 		// We're now in an interactive state
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Establishing port-forward tunnels to Service...\n")
-		berr := bytes.NewBufferString("")
-		bout := bytes.NewBufferString("")
 		stopCh := make(chan struct{})
-		readyCh := make(chan struct{})
 		ic := make(chan os.Signal, 1)
 		signal.Notify(ic, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 		go func() {
@@ -432,41 +424,13 @@ func NewTapCommand(client kubernetes.Interface, config *rest.Config, viper *vipe
 		if err != nil {
 			return err
 		}
-		transport, upgrader, err := spdy.RoundTripperFor(config)
-		if err != nil {
-			return err
-		}
-		path := "/api/v1/namespaces/" + namespace + "/pods/" + pod.Name + "/portforward"
-		dialer := spdy.NewDialer(upgrader,
-			&http.Client{Transport: transport},
-			http.MethodPost,
-			&url.URL{
-				Scheme: "https",
-				Path:   path,
-				Host:   strings.TrimPrefix(strings.TrimPrefix(config.Host, `http://`), `https://`),
-			},
-		)
-		fw, err := portforward.New(dialer,
-			[]string{
-				fmt.Sprintf("%s:%s", "4000", strconv.Itoa(int(kubetapProxyListenPort))),
-			}, stopCh, readyCh, bout, berr)
-		if err != nil {
-			return err
-		}
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "\nPort-Forwards:\n\n")
-		if https {
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  %s - https://127.0.0.1:%s\n\n", targetSvcName, "4000")
-		} else {
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  %s - http://127.0.0.1:%s\n\n", targetSvcName, "4000")
-		}
-		if err := fw.ForwardPorts(); err != nil {
-			return err
-		}
-		<-readyCh
-		halt := make(chan os.Signal, 1)
-		signal.Notify(halt, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-		<-halt
-		return nil
+
+		// Spawn kubectl exec to attach to mitmproxy tmux session
+		execCmd := exec.Command("kubectl", "exec", "-it", pod.Name, "-n", namespace, "-c", "kubetap", "--", "tmux", "attach-session", "-t", "mitmproxy")
+		execCmd.Stdin = os.Stdin
+		execCmd.Stdout = os.Stdout
+		execCmd.Stderr = os.Stderr
+		return execCmd.Run()
 	}
 }
 

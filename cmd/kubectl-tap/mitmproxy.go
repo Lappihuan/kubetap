@@ -64,6 +64,19 @@ var MitmproxySidecarContainer = v1.Container{
 		SuccessThreshold:    1,
 		TimeoutSeconds:      5,
 	},
+	LivenessProbe: &v1.Probe{
+		// Check if mitmproxy is still listening on its port
+		// If it dies or stops listening, the container will be restarted
+		ProbeHandler: v1.ProbeHandler{
+			TCPSocket: &v1.TCPSocketAction{
+				Port: intstr.FromInt(kubetapProxyListenPort),
+			},
+		},
+		InitialDelaySeconds: 10,
+		PeriodSeconds:       10,
+		FailureThreshold:    2,
+		TimeoutSeconds:      5,
+	},
 	VolumeMounts: []v1.VolumeMount{
 		{
 			// Name:    "", // Name is controlled by main

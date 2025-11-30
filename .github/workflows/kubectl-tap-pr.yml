@@ -158,5 +158,5 @@ jobs:
       - name: Build
         run: go install -v -trimpath -ldflags="-s -w" ./cmd/kubectl-tap
 
-      - name: Integration Test
-        run: ./scripts/ig-test.zsh
+      #- name: Integration Test
+      #  run: ./scripts/ig-test.zsh

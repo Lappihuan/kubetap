@@ -4,7 +4,6 @@
     "config:recommended"
   ],
   "dependencyDashboard": true,
-  "enableVulnerabilityAlerts": true,
   "postUpdateOptions": [
     "gomodTidy"
   ],

@@ -111,8 +111,8 @@ jobs:
         push: true
         registry: ghcr.io
         tags: |
-          ghcr.io/${{ github.repository_owner }}/kubectl-tap:latest
-          ghcr.io/${{ github.repository_owner }}/kubectl-tap:${{ github.sha }}
+          ghcr.io/lappihuan/kubectl-tap:latest
+          ghcr.io/lappihuan/kubectl-tap:${{ github.sha }}
 
   docker-build-alpine:
     timeout-minutes: 10
@@ -132,8 +132,8 @@ jobs:
         push: true
         registry: ghcr.io
         tags: |
-          ghcr.io/${{ github.repository_owner }}/kubectl-tap:alpine
-          ghcr.io/${{ github.repository_owner }}/kubectl-tap:alpine-${{ github.sha }}
+          ghcr.io/lappihuan/kubectl-tap:alpine
+          ghcr.io/lappihuan/kubectl-tap:alpine-${{ github.sha }}
   release:
     timeout-minutes: 15
     if: startsWith(github.ref, 'refs/tags/')

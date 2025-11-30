@@ -72,8 +72,6 @@ jobs:
 
     - name: Install golangci-lint (official binary)
       uses: golangci/golangci-lint-action@v9
-      with:
-        version: v2.57.0
 
     - name: Use workspace-local Go cache and GOPATH
       run: |

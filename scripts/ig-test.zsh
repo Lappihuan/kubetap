@@ -54,6 +54,13 @@ trap '{ e=${?}; sleep 1; kind delete cluster --name kubetap ; exit ${e} }' SIGIN
 kind create cluster --name kubetap
 
 #
+# Build and load the mitmproxy sidecar image into the kind cluster
+#
+echo "Building and loading mitmproxy sidecar image..."
+docker build -t kubetap-mitmproxy:latest -f ./proxies/mitmproxy/Dockerfile ./proxies/mitmproxy/
+kind load docker-image kubetap-mitmproxy:latest --name kubetap
+
+#
 # Test kubetap using helm ${chart}
 #
 _kubetap_helm_charts=('grafana/grafana' 'oci://registry-1.docker.io/bitnamicharts/nginx')
@@ -68,7 +75,7 @@ for chart in ${_kubetap_helm_charts[@]}; do
   _kubetap_service=${_kubetap_helm_services[${_kubetap_iter}]}
 
   helm install --kube-context kind-kubetap ${_kubetap_helm} ${chart}
-  kubectl tap on ${_kubetap_service} -p${_kubetap_port} --context kind-kubetap
+  kubectl tap on ${_kubetap_service} -p${_kubetap_port} --context kind-kubetap --image kubetap-mitmproxy:latest
   sleep 20
 
   _kubetap_ready_state=""

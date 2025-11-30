@@ -7,8 +7,8 @@ script_dir=${0:A:h}
 # Prep env
 #
 
-KIND_VERSION=v0.26.0
-HELM_VERSION=v3.16.4
+KIND_VERSION=v0.30.0
+HELM_VERSION=v4.0.1
 
 # modfile hack to avoid package collisions and work around azure go-autorest bug
 print "module kubetap-ig-tests
@@ -30,7 +30,7 @@ fi
 
 # install helm if not available
 if [[ =helm == '' ]]; then
-  GO111MODULE=on go get -modfile=ig-tests.mod helm/cmd/helm@${HELM_VERSION}
+  GO111MODULE=on go get -modfile=ig-tests.mod helm.sh/helm/v4/cmd/helm@${HELM_VERSION}
 fi
 helm repo add grafana https://grafana.github.io/helm-charts --force-update
 helm repo update
@@ -54,6 +54,13 @@ trap '{ e=${?}; sleep 1; kind delete cluster --name kubetap ; exit ${e} }' SIGIN
 kind create cluster --name kubetap
 
 #
+# Build and load the mitmproxy sidecar image into the kind cluster
+#
+echo "Building and loading mitmproxy sidecar image..."
+docker build -t kubetap-mitmproxy:latest -f ./proxies/mitmproxy/Dockerfile ./proxies/mitmproxy/
+kind load docker-image kubetap-mitmproxy:latest --name kubetap
+
+#
 # Test kubetap using helm ${chart}
 #
 _kubetap_helm_charts=('grafana/grafana' 'oci://registry-1.docker.io/bitnamicharts/nginx')
@@ -68,7 +75,7 @@ for chart in ${_kubetap_helm_charts[@]}; do
   _kubetap_service=${_kubetap_helm_services[${_kubetap_iter}]}
 
   helm install --kube-context kind-kubetap ${_kubetap_helm} ${chart}
-  kubectl tap on ${_kubetap_service} -p${_kubetap_port} --context kind-kubetap
+  kubectl tap on ${_kubetap_service} -p${_kubetap_port} --context kind-kubetap --image kubetap-mitmproxy:latest
   sleep 20
 
   _kubetap_ready_state=""
@@ -85,24 +92,34 @@ for chart in ${_kubetap_helm_charts[@]}; do
   done
   if [[ ${_kubetap_ready_state} != 'true true' ]]; then
     echo "container did not come up within 90 seconds"
+    echo ""
+    echo "=== DEBUG INFO ==="
+    echo "Pod status:"
+    kubectl --context kind-kubetap get pods -o wide
+    echo ""
+    echo "Pod events:"
+    kubectl --context kind-kubetap describe pod ${_kubetap_pod}
+    echo ""
+    echo "Pod logs (all containers):"
+    for _container in $(kubectl --context kind-kubetap get pod ${_kubetap_pod} -o jsonpath='{.spec.containers[*].name}'); do
+      echo "--- Container: ${_container} ---"
+      kubectl --context kind-kubetap logs ${_kubetap_pod} -c ${_container} 2>&1 || echo "No logs available"
+    done
+    echo "=================="
+    echo ""
     return 1
   fi
   unset _kubetap_pod _kubetap_ready_state i
 
   sleep 1
-  kubectl port-forward svc/${_kubetap_service} -n default 2244:2244 &
-  _kubetap_pf_one_pid=${!}
   kubectl port-forward svc/${_kubetap_service} -n default 4000:${_kubetap_port} &
-  _kubetap_pf_two_pid=${!}
+  _kubetap_pf_pid=${!}
   sleep 5
 
-  # check that we can reach both services
-  curl -v http://127.0.0.1:2244 || return 1
+  # check that we can reach the application port
   curl -v http://127.0.0.1:4000 || return 1
-  # TODO: should also check the mitmproxy JSON resp body to check that it's connected
-  kill ${_kubetap_pf_one_pid}
-  kill ${_kubetap_pf_two_pid}
-  unset _kubetap_pf_one_pid _kubetap_pf_two_pid
+  kill ${_kubetap_pf_pid}
+  unset _kubetap_pf_pid
 
   # cleanup test
   kubectl tap off ${_kubetap_service} --context kind-kubetap

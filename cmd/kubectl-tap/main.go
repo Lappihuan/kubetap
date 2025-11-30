@@ -74,9 +74,8 @@ func main() {
 	onCmd.Flags().StringP("port", "p", "", "target Service port")
 	onCmd.Flags().StringP("image", "i", defaultImageHTTP, "image to run in proxy container")
 	onCmd.Flags().Bool("https", false, "enable if target listener uses HTTPS")
-	onCmd.Flags().String("command-args", "mitmweb", "specify command arguments for the proxy sidecar container")
+	onCmd.Flags().String("command-args", "mitmproxy", "specify command arguments for the proxy sidecar container")
 	onCmd.Flags().Bool("port-forward", false, "enable to automatically kubctl port-forward to services")
-	onCmd.Flags().Bool("browser", false, "enable to open browser windows to service and proxy. Also enables --port-forward")
 	onCmd.Flags().String("protocol", "http", "specify a protocol. Supported protocols: [ http ]")
 
 	rootCmd.AddCommand(versionCmd, onCmd, offCmd, listCmd)
@@ -101,9 +100,6 @@ func bindTapFlags(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if err := viper.BindPFlag("portForward", cmd.Flags().Lookup("port-forward")); err != nil {
-		return err
-	}
-	if err := viper.BindPFlag("browser", cmd.Flags().Lookup("browser")); err != nil {
 		return err
 	}
 	if err := viper.BindPFlag("protocol", cmd.Flags().Lookup("protocol")); err != nil {

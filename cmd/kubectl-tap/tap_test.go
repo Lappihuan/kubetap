@@ -88,7 +88,7 @@ func Test_NewTapCommand(t *testing.T) {
 					for _, p := range c.Ports {
 						require.LessOrEqual(len(p.Name), maxPortLen, "port name max length exceeded")
 					}
-					require.GreaterOrEqual(len(c.Ports), 2, "tap port was not added to the deployment")
+					require.GreaterOrEqual(len(c.Ports), 1, "tap port was not added to the deployment")
 				}
 				// configmap checks
 				fakeCM, err := fakeClient.CoreV1().ConfigMaps(testViper.GetString("namespace")).Get(context.TODO(), kubetapConfigMapPrefix+fakeDeployment.Name, metav1.GetOptions{})
@@ -280,11 +280,6 @@ var (
 					Name:       "servicePortOne",
 					Port:       80,
 					TargetPort: intstr.FromInt(8080),
-				},
-				{
-					Name:       kubetapServicePortName,
-					Port:       kubetapProxyWebInterfacePort,
-					TargetPort: intstr.FromInt(kubetapProxyListenPort),
 				},
 			},
 			Selector: map[string]string{

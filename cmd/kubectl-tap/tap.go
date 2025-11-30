@@ -27,7 +27,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pkg/browser"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -47,13 +46,12 @@ import (
 )
 
 const (
-	kubetapContainerName         = "kubetap"
-	kubetapServicePortName       = "kubetap-web"
-	kubetapPortName              = "kubetap-listen"
-	kubetapWebPortName           = "kubetap-web"
-	kubetapProxyListenPort       = 7777
-	kubetapProxyWebInterfacePort = 2244
-	kubetapConfigMapPrefix       = "kubetap-target-"
+	kubetapContainerName   = "kubetap"
+	kubetapServicePortName = "kubetap-web"
+	kubetapPortName        = "kubetap-listen"
+	kubetapWebPortName     = "kubetap-web"
+	kubetapProxyListenPort = 7777
+	kubetapConfigMapPrefix = "kubetap-target-"
 
 	interactiveTimeoutSeconds = 90
 	configMapAnnotationPrefix = "target-"
@@ -189,11 +187,7 @@ func NewTapCommand(client kubernetes.Interface, config *rest.Config, viper *vipe
 		image := viper.GetString("proxyImage")
 		https := viper.GetBool("https")
 		portForward := viper.GetBool("portForward")
-		openBrowser := viper.GetBool("browser")
 
-		if openBrowser {
-			portForward = true
-		}
 		commandArgs := strings.Fields(viper.GetString("commandArgs"))
 		if targetSvcPort == 0 {
 			return errors.New("--port flag not provided")
@@ -347,13 +341,12 @@ func NewTapCommand(client kubernetes.Interface, config *rest.Config, viper *vipe
 		if !portForward {
 			_, _ = fmt.Fprintln(cmd.OutOrStdout())
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Port %d of Service %q has been tapped!\n\n", targetSvcPort, targetSvcName)
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "You can access the proxy web interface at http://127.0.0.1:2244\n")
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "after running the following command:\n\n")
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  kubectl port-forward svc/%s -n %s 2244:2244\n\n", targetSvcName, namespace)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "To access the mitmproxy interactive terminal, attach to the kubetap sidecar:\n\n")
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  kubectl exec -it <pod-name> -c kubetap -- tmux attach-session -t mitmproxy\n\n")
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "If the Service is not publicly exposed through an Ingress,\n")
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "you can access it with the following command:\n\n")
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  kubectl port-forward svc/%s -n %s 4000:%d\n\n", targetSvcName, namespace, targetSvcPort)
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "In the future, you can run with --port-forward or --browser to automate this process.\n")
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "In the future, you can run with --port-forward to automate this process.\n")
 			return nil
 		}
 
@@ -455,29 +448,16 @@ func NewTapCommand(client kubernetes.Interface, config *rest.Config, viper *vipe
 		)
 		fw, err := portforward.New(dialer,
 			[]string{
-				fmt.Sprintf("%s:%s", strconv.Itoa(kubetapProxyWebInterfacePort), strconv.Itoa(kubetapProxyWebInterfacePort)),
 				fmt.Sprintf("%s:%s", "4000", strconv.Itoa(int(kubetapProxyListenPort))),
 			}, stopCh, readyCh, bout, berr)
 		if err != nil {
 			return err
 		}
 		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "\nPort-Forwards:\n\n")
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  %s - http://127.0.0.1:%s\n", proxy.String(), strconv.Itoa(int(kubetapProxyWebInterfacePort)))
 		if https {
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  %s - https://127.0.0.1:%s\n\n", targetSvcName, "4000")
 		} else {
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  %s - http://127.0.0.1:%s\n\n", targetSvcName, "4000")
-		}
-		if openBrowser {
-			go func() {
-				time.Sleep(2 * time.Second)
-				_ = browser.OpenURL("http://127.0.0.1:" + strconv.Itoa(int(kubetapProxyWebInterfacePort)))
-				if https {
-					_ = browser.OpenURL("https://127.0.0.1:" + "4000")
-				} else {
-					_ = browser.OpenURL("http://127.0.0.1:" + "4000")
-				}
-			}()
 		}
 		if err := fw.ForwardPorts(); err != nil {
 			return err
@@ -660,13 +640,6 @@ func tapSvc(svcClient corev1.ServiceInterface, svcName string, targetPort int32)
 
 		anns[annotationOriginalTargetPort] = targetSvcPort.TargetPort.String()
 		svc.SetAnnotations(anns)
-
-		proxySvcPort := v1.ServicePort{
-			Name:       kubetapServicePortName,
-			Port:       kubetapProxyWebInterfacePort,
-			TargetPort: intstr.FromInt(int(kubetapProxyWebInterfacePort)),
-		}
-		svc.Spec.Ports = append(svc.Spec.Ports, proxySvcPort)
 
 		// then do the swap and build a new ports list
 		var servicePorts []v1.ServicePort

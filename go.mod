@@ -3,7 +3,6 @@ module github.com/Lappihuan/kubetap
 go 1.25
 
 require (
-	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0

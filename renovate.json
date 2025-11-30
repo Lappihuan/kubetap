@@ -5,76 +5,30 @@
   ],
   "dependencyDashboard": true,
   "enableVulnerabilityAlerts": true,
-  "dockerfile": {
-    "enabled": true
-  },
-  "docker": {
-    "enabled": true,
-    "automerge": false
-  },
   "postUpdateOptions": [
-    "gomodTidy",
-    "npmDedupe",
-    "yarnDedupeHighest"
+    "gomodTidy"
   ],
   "customManagers": [
     {
       "customType": "regex",
       "fileMatch": ["^scripts/deps\\.sh$"],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\n]+)\\n[A-Z_]+_VERSION=(?<currentValue>[^\\s]+)"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[A-Z_]+_VERSION=(?<currentValue>\\S+)"
       ],
       "depNameTemplate": "{{{depName}}}",
       "datasourceTemplate": "{{{datasource}}}"
-    },
-    {
-      "customType": "regex",
-      "fileMatch": ["\\.github/workflows/.+\\.ya?ml$"],
-      "matchStrings": [
-        "uses: (?<depName>[^@]+)@(?<currentValue>[^\\s]+)"
-      ],
-      "depNameTemplate": "github-action:{{{depName}}}",
-      "datasourceTemplate": "github-tags"
     }
   ],
   "packageRules": [
     {
       "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["major"],
-      "enabled": true,
-      "groupName": "docker-major"
-    },
-    {
-      "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true,
-      "automergeStrategy": "squash",
-      "minimumReleaseAge": "7 days",
-      "groupName": "docker-minor-patch"
+      "automerge": false,
+      "groupName": "docker-updates"
     },
     {
       "matchDatasources": ["github-tags"],
-      "matchUpdateTypes": ["major"],
-      "enabled": true,
-      "groupName": "tool-major"
-    },
-    {
-      "matchDatasources": ["github-tags"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true,
-      "automergeStrategy": "squash",
-      "minimumReleaseAge": "3 days",
-      "groupName": "tool-minor-patch"
-    },
-    {
-      "matchPackagePatterns": ["^golang$"],
-      "enabled": true,
-      "groupName": "golang"
-    },
-    {
-      "matchPackagePatterns": ["^actions/"],
-      "enabled": true,
-      "groupName": "github-actions"
+      "automerge": false,
+      "groupName": "tool-updates"
     }
   ]
 }

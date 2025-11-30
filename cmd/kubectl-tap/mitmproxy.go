@@ -184,9 +184,9 @@ func createMitmproxyConfigMap(configmapClient corev1.ConfigMapInterface, proxyOp
 	switch proxyOpts.Mode {
 	case "reverse":
 		if proxyOpts.UpstreamHTTPS {
-			mitmproxyConfig = append([]byte(mitmproxyBaseConfig), []byte("mode: reverse:https://127.0.0.1:"+proxyOpts.UpstreamPort)...)
+			mitmproxyConfig = append([]byte(mitmproxyBaseConfig), []byte("mode:\n  - reverse:https://127.0.0.1:"+proxyOpts.UpstreamPort)...)
 		} else {
-			mitmproxyConfig = append([]byte(mitmproxyBaseConfig), []byte("mode: reverse:http://127.0.0.1:"+proxyOpts.UpstreamPort)...)
+			mitmproxyConfig = append([]byte(mitmproxyBaseConfig), []byte("mode:\n  - reverse:http://127.0.0.1:"+proxyOpts.UpstreamPort)...)
 		}
 	case "regular":
 		// non-applicable

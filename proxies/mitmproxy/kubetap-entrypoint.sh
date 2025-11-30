@@ -21,7 +21,7 @@ if [[ ${1} == 'mitmdump' || ${1} == 'mitmproxy' || ${1} == 'mitmweb' ]]; then
     # Keep the container running by attaching to the session (this allows logs to flow)
     exec tmux attach-session -t mitmproxy
   else
-    # For mitmdump and mitmweb (or other commands), use direct execution
+    # For mitmproxy (or other commands), use direct execution
     exec ${@} --set "confdir=${MITMPROXY_PATH}"
   fi
 else

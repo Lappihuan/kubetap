@@ -48,10 +48,6 @@ jobs:
         run: |
           # Ensure modules are present and correct before installing tools / building
           go mod download
-          echo "--- go env ---"
-          go env
-          echo "--- go list -m all ---"
-          go list -m all
           make deps
 
       - name: Run code generation

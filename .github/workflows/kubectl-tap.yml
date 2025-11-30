@@ -126,4 +126,4 @@ jobs:
     - 
       name: Update krew plugin
       if: "!contains(github.ref, '-')" # skip RCs
-      uses: rajatjindal/krew-release-bot@v0.0.38
+      uses: rajatjindal/krew-release-bot@v0.0.47

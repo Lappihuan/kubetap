@@ -6,7 +6,8 @@ on:
   push:
     branches: [master]
     paths:
-    - 'proxies/mitmproxy'
+    - 'proxies/mitmproxy/**'
+    - '.github/workflows/mitmproxy.yml'
 
 permissions:
   packages: write

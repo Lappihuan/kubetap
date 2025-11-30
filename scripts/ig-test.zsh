@@ -7,8 +7,8 @@ script_dir=${0:A:h}
 # Prep env
 #
 
-KIND_VERSION=v0.8.1
-HELM_VERSION=v3.2.1
+KIND_VERSION=v0.26.0
+HELM_VERSION=v3.16.4
 
 # modfile hack to avoid package collisions and work around azure go-autorest bug
 print "module kubetap-ig-tests
@@ -32,7 +32,7 @@ fi
 if [[ =helm == '' ]]; then
   GO111MODULE=on go get -modfile=ig-tests.mod helm/cmd/helm@${HELM_VERSION}
 fi
-helm repo add stable https://charts.helm.sh/stable --force-update
+helm repo add grafana https://grafana.github.io/helm-charts --force-update
 helm repo update
 
 # we use kind to establish a local testing cluster
@@ -56,8 +56,8 @@ kind create cluster --name kubetap
 #
 # Test kubetap using helm ${chart}
 #
-_kubetap_helm_charts=('stable/grafana' 'stable/dokuwiki')
-_kubetap_helm_services=('grafana' 'dokuwiki')
+_kubetap_helm_charts=('grafana/grafana' 'oci://registry-1.docker.io/bitnamicharts/nginx')
+_kubetap_helm_services=('grafana' 'nginx')
 _kubetap_helm_svc_port=('80' '80')
 
 typeset -i _kubetap_iter

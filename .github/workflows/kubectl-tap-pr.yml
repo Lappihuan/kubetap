@@ -37,9 +37,15 @@ jobs:
           path: ${{ github.workspace }}/.gobin
           key: ${{ runner.os }}-gobin-${{ hashFiles('scripts/deps.sh') }}
 
-      - name: Install golangci-lint (fast)
+      - name: Clean Go caches
         run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.35.2
+          go clean -cache -modcache || true
+          rm -rf "$(go env GOCACHE)" || true
+
+      - name: Install golangci-lint (official binary)
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.50.0
 
       - name: Lint
         run: golangci-lint run --timeout 3m
@@ -64,7 +70,7 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ matrix.go || '1.25' }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
@@ -98,7 +104,7 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ matrix.go || '1.25' }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 

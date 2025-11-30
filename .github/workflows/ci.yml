@@ -24,7 +24,7 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ matrix.go || '1.25' }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
@@ -57,6 +57,11 @@ jobs:
 
       - name: Run code generation
         run: go generate ./...
+
+      - name: Install golangci-lint (official binary)
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.50.0
 
       - name: Lint
         run: golangci-lint run --timeout 5m

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -o pipefail
-# Don't use errexit yet - we want to see errors but continue to process args
 
 # Copy the config file if it exists and is readable
 if [ -f /home/mitmproxy/config/config.yaml ] && [ -r /home/mitmproxy/config/config.yaml ]; then
@@ -20,20 +19,22 @@ if [[ "${1}" == 'mitmdump' || "${1}" == 'mitmproxy' || "${1}" == 'mitmweb' ]]; t
     # Start a tmux session with mitmproxy to allow interactive access without requiring a TTY
     # Users can 'kubectl exec -it <pod> -- tmux attach-session -t mitmproxy' to interact
     echo "Starting mitmproxy in tmux session with confdir=${MITMPROXY_PATH}" >&2
-    tmux new-session -d -s mitmproxy -c /home/mitmproxy \
-      mitmproxy --set "confdir=${MITMPROXY_PATH}" "${@:2}" 2>&1 | tee -a /tmp/mitmproxy-startup.log
+    
+    # Create a tmux session and capture any startup errors
+    tmux new-session -d -s mitmproxy -c /home/mitmproxy -x 200 -y 50 \
+      "mitmproxy --set confdir=${MITMPROXY_PATH} ${@:2}; bash"
     
     echo "Mitmproxy tmux session created. Waiting for it to start..." >&2
-    sleep 2
+    sleep 3
     
     # Check if the session is still running
     if tmux has-session -t mitmproxy 2>/dev/null; then
       echo "Mitmproxy session is running" >&2
-      # Show the current output
+      echo "=== Current tmux pane content ===" >&2
       tmux capture-pane -t mitmproxy -p >&2
+      echo "=== End tmux pane content ===" >&2
     else
       echo "ERROR: Mitmproxy session exited immediately" >&2
-      cat /tmp/mitmproxy-startup.log >&2 || true
     fi
     
     # Keep the container running - sleep indefinitely

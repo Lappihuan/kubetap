@@ -85,6 +85,21 @@ for chart in ${_kubetap_helm_charts[@]}; do
   done
   if [[ ${_kubetap_ready_state} != 'true true' ]]; then
     echo "container did not come up within 90 seconds"
+    echo ""
+    echo "=== DEBUG INFO ==="
+    echo "Pod status:"
+    kubectl --context kind-kubetap get pods -o wide
+    echo ""
+    echo "Pod events:"
+    kubectl --context kind-kubetap describe pod ${_kubetap_pod}
+    echo ""
+    echo "Pod logs (all containers):"
+    for _container in $(kubectl --context kind-kubetap get pod ${_kubetap_pod} -o jsonpath='{.spec.containers[*].name}'); do
+      echo "--- Container: ${_container} ---"
+      kubectl --context kind-kubetap logs ${_kubetap_pod} -c ${_container} 2>&1 || echo "No logs available"
+    done
+    echo "=================="
+    echo ""
     return 1
   fi
   unset _kubetap_pod _kubetap_ready_state i

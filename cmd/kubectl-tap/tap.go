@@ -391,11 +391,11 @@ func NewTapCommand(client kubernetes.Interface, config *rest.Config, viper *vipe
 			progressbar.OptionSetWidth(30),
 			progressbar.OptionSetDescription("Waiting for Pod containers to become ready..."),
 			progressbar.OptionOnCompletion(func() {
-				fmt.Fprintf(cmd.OutOrStderr(), "\n")
+				_, _ = fmt.Fprintf(cmd.OutOrStderr(), "\n")
 			}),
 		)
 		var ready bool
-		for i := 0; i < interactiveTimeoutSeconds; i++ {
+		for range interactiveTimeoutSeconds {
 			_ = bar.Add(1)
 			if ready {
 				_ = bar.Finish()
@@ -428,7 +428,7 @@ func NewTapCommand(client kubernetes.Interface, config *rest.Config, viper *vipe
 			}
 		}
 		if !ready {
-			fmt.Fprintf(cmd.OutOrStdout(), ".\n\n")
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), ".\n\n")
 			die("Pod not running after 90 seconds. Cancelling port-forward, tap still active.")
 		}
 		dp, err := deploymentFromSelectors(deploymentsClient, targetService.Spec.Selector)
@@ -461,12 +461,12 @@ func NewTapCommand(client kubernetes.Interface, config *rest.Config, viper *vipe
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(cmd.OutOrStdout(), "\nPort-Forwards:\n\n")
-		fmt.Fprintf(cmd.OutOrStdout(), "  %s - http://127.0.0.1:%s\n", proxy.String(), strconv.Itoa(int(kubetapProxyWebInterfacePort)))
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "\nPort-Forwards:\n\n")
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  %s - http://127.0.0.1:%s\n", proxy.String(), strconv.Itoa(int(kubetapProxyWebInterfacePort)))
 		if https {
-			fmt.Fprintf(cmd.OutOrStdout(), "  %s - https://127.0.0.1:%s\n\n", targetSvcName, "4000")
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  %s - https://127.0.0.1:%s\n\n", targetSvcName, "4000")
 		} else {
-			fmt.Fprintf(cmd.OutOrStdout(), "  %s - http://127.0.0.1:%s\n\n", targetSvcName, "4000")
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  %s - http://127.0.0.1:%s\n\n", targetSvcName, "4000")
 		}
 		if openBrowser {
 			go func() {

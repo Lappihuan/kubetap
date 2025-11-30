@@ -55,15 +55,13 @@ var MitmproxySidecarContainer = v1.Container{
 		// Initialize the embedded ProbeHandler explicitly to avoid
 		// any ambiguity with promoted fields across k8s API versions.
 		ProbeHandler: v1.ProbeHandler{
-			HTTPGet: &v1.HTTPGetAction{
-				Path:   "/",
-				Port:   intstr.FromInt(kubetapProxyListenPort),
-				Scheme: v1.URISchemeHTTP,
+			TCPSocket: &v1.TCPSocketAction{
+				Port: intstr.FromInt(kubetapProxyListenPort),
 			},
 		},
 		InitialDelaySeconds: 5,
 		PeriodSeconds:       5,
-		SuccessThreshold:    3,
+		SuccessThreshold:    1,
 		TimeoutSeconds:      5,
 	},
 	VolumeMounts: []v1.VolumeMount{

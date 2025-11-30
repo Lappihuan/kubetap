@@ -1,12 +1,16 @@
 #!/bin/sh
 set -eu
 
-# Developer tool versions (tweak if you need specific versions)
+# Developer tool versions (tracked by Renovate)
+# renovate: datasource=github-tags depName=golangci/golangci-lint
 GOLANGCI_LINT_VERSION=v1.35.2
+# renovate: datasource=github-tags depName=gotestyourself/gotestsum
 GOTESTSUM_VERSION=v0.6.0
+# renovate: datasource=github-tags depName=kubernetes-sigs/kind
 KIND_VERSION=v0.9.0
+# renovate: datasource=github-tags depName=helm/helm
 HELM_VERSION=v3.5.0
-# prefer gofumpt (canonical formatter)
+# renovate: datasource=github-tags depName=mvdan/sh
 GOFUMPT_VERSION=v0.9.2
 
 # canonical GOBIN fallback

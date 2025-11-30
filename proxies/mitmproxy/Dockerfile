@@ -1,6 +1,6 @@
-FROM mitmproxy/mitmproxy:latest
+FROM mitmproxy/mitmproxy:12.0.1
 
-# mitmproxy is built on alpine:3.11, so in case the image is old
+# mitmproxy is built on alpine, so in case the image is old
 # (and lazily avoiding having to build it ourselves for now), update
 RUN apk upgrade -U --no-cache
 # && pip3 install -U pip  # latest version of pip is buggy - 08/17/2020

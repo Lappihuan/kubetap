@@ -19,6 +19,11 @@ linters:
     - cyclop
     - depguard
     - exhaustruct
+    - wsl_v5
+    - varnamelen
+    - godoclint
+    - noinlineerr
+    - inamedparam
   exclusions:
     paths:
       - hack

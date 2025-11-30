@@ -339,26 +339,26 @@ func NewTapCommand(client kubernetes.Interface, config *rest.Config, viper *vipe
 		// Tap the Service to redirect the incoming traffic to our proxy, which is configured to redirect
 		// to the original port.
 		if err := tapSvc(servicesClient, targetSvcName, targetSvcPort); err != nil {
-			fmt.Fprintln(cmd.OutOrStdout(), "Error modifying Service, reverting tap...")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Error modifying Service, reverting tap...")
 			_ = NewUntapCommand(client, viper)(cmd, args)
 			return err
 		}
 
 		if !portForward {
-			fmt.Fprintln(cmd.OutOrStdout())
-			fmt.Fprintf(cmd.OutOrStdout(), "Port %d of Service %q has been tapped!\n\n", targetSvcPort, targetSvcName)
-			fmt.Fprintf(cmd.OutOrStdout(), "You can access the proxy web interface at http://127.0.0.1:2244\n")
-			fmt.Fprintf(cmd.OutOrStdout(), "after running the following command:\n\n")
-			fmt.Fprintf(cmd.OutOrStdout(), "  kubectl port-forward svc/%s -n %s 2244:2244\n\n", targetSvcName, namespace)
-			fmt.Fprintf(cmd.OutOrStdout(), "If the Service is not publicly exposed through an Ingress,\n")
-			fmt.Fprintf(cmd.OutOrStdout(), "you can access it with the following command:\n\n")
-			fmt.Fprintf(cmd.OutOrStdout(), "  kubectl port-forward svc/%s -n %s 4000:%d\n\n", targetSvcName, namespace, targetSvcPort)
-			fmt.Fprintf(cmd.OutOrStdout(), "In the future, you can run with --port-forward or --browser to automate this process.\n")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout())
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Port %d of Service %q has been tapped!\n\n", targetSvcPort, targetSvcName)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "You can access the proxy web interface at http://127.0.0.1:2244\n")
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "after running the following command:\n\n")
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  kubectl port-forward svc/%s -n %s 2244:2244\n\n", targetSvcName, namespace)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "If the Service is not publicly exposed through an Ingress,\n")
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "you can access it with the following command:\n\n")
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  kubectl port-forward svc/%s -n %s 4000:%d\n\n", targetSvcName, namespace, targetSvcPort)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "In the future, you can run with --port-forward or --browser to automate this process.\n")
 			return nil
 		}
 
 		// We're now in an interactive state
-		fmt.Fprintf(cmd.OutOrStdout(), "Establishing port-forward tunnels to Service...\n")
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Establishing port-forward tunnels to Service...\n")
 		berr := bytes.NewBufferString("")
 		bout := bytes.NewBufferString("")
 		stopCh := make(chan struct{})
@@ -368,8 +368,8 @@ func NewTapCommand(client kubernetes.Interface, config *rest.Config, viper *vipe
 		go func() {
 			<-ic
 			close(stopCh)
-			fmt.Fprintln(cmd.OutOrStdout(), "")
-			fmt.Fprintln(cmd.OutOrStdout(), "Stopping kubetap...")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Stopping kubetap...")
 			_ = NewUntapCommand(client, viper)(cmd, args)
 			die()
 		}()

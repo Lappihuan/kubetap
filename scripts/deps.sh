@@ -55,8 +55,8 @@ fi
 # gofumpt (preferred formatter)
 if ! [ -x "$(command -v gofumpt)" ]; then
   echo "Installing gofumpt ${GOFUMPT_VERSION}"
-  if ! go install mvdan.cc/gofumpt/gofumpt@${GOFUMPT_VERSION} 2>/dev/null; then
-    go install mvdan.cc/gofumpt/gofumpt@latest || true
+  if ! go install mvdan.cc/gofumpt@${GOFUMPT_VERSION} 2>/dev/null; then
+    go install mvdan.cc/gofumpt@latest || true
   fi
 fi
 

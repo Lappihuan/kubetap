@@ -24,7 +24,6 @@ linters:
     - godoclint
     - noinlineerr
     - inamedparam
-    - intrange
     - ireturn
     - maintidx
     - gosec

@@ -2,7 +2,8 @@ FROM mitmproxy/mitmproxy:12.2.1
 
 # mitmproxy is built on alpine, so in case the image is old
 # (and lazily avoiding having to build it ourselves for now), update
-RUN apk upgrade -U --no-cache
+RUN apk upgrade -U --no-cache && \
+    apk add --no-cache tmux
 # && pip3 install -U pip  # latest version of pip is buggy - 08/17/2020
 
 # HACK: the security context of the injected pod could be run as any user, therefore

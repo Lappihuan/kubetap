@@ -34,13 +34,11 @@ var (
 	mitmproxyConfigFile  = "config.yaml"
 	mitmproxyBaseConfig  = `listen_port: 7777
 ssl_insecure: true
-web_port: 2244
-web_host: 0.0.0.0
-web_open_browser: false
 `
 )
 
 // MitmproxySidecarContainer is the default proxy sidecar for HTTP Taps.
+// It uses mitmproxy in interactive terminal mode managed by tmux for TTY-less container environments.
 var MitmproxySidecarContainer = v1.Container{
 	Name: kubetapContainerName,
 	// Image:           image,       // Image is controlled by main
@@ -52,11 +50,6 @@ var MitmproxySidecarContainer = v1.Container{
 			ContainerPort: kubetapProxyListenPort,
 			Protocol:      v1.ProtocolTCP,
 		},
-		{
-			Name:          kubetapWebPortName,
-			ContainerPort: kubetapProxyWebInterfacePort,
-			Protocol:      v1.ProtocolTCP,
-		},
 	},
 	ReadinessProbe: &v1.Probe{
 		// Initialize the embedded ProbeHandler explicitly to avoid
@@ -64,7 +57,7 @@ var MitmproxySidecarContainer = v1.Container{
 		ProbeHandler: v1.ProbeHandler{
 			HTTPGet: &v1.HTTPGetAction{
 				Path:   "/",
-				Port:   intstr.FromInt(kubetapProxyWebInterfacePort),
+				Port:   intstr.FromInt(kubetapProxyListenPort),
 				Scheme: v1.URISchemeHTTP,
 			},
 		},
@@ -94,7 +87,7 @@ var MitmproxySidecarContainer = v1.Container{
 	},
 }
 
-// NewMitmproxy initializes a new mitmproxy Tap.
+// NewMitmproxy initializes a new mitmproxy Tap with interactive terminal mode via tmux.
 func NewMitmproxy(c kubernetes.Interface, p ProxyOptions) Tap {
 	// mitmproxy only supports one mode right now.
 	// How we expose options for other modes may
@@ -107,7 +100,11 @@ func NewMitmproxy(c kubernetes.Interface, p ProxyOptions) Tap {
 	}
 }
 
-// Mitmproxy is a interactive web proxy for intercepting and modifying HTTP requests.
+// Mitmproxy is an interactive proxy for intercepting and modifying HTTP requests.
+// It runs in a tmux session to provide interactive terminal access without requiring
+// a TTY at container startup. Users can attach to the session via:
+//
+//	kubectl exec -it <pod> -- tmux attach-session -t mitmproxy
 type Mitmproxy struct {
 	Protos    []Protocol
 	Client    kubernetes.Interface

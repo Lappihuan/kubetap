@@ -19,9 +19,9 @@ argocd-server           ClusterIP   10.43.118.109   <none>        80/TCP,443/TCP
 
 ## Tapping the service
 
-The proxy container (MITMProxy by default) runs as a sidecar, keeping network
-traffic within the cluster and incurring a lessened performance penalty when
-proxying the traffic.
+The proxy container (mitmproxy by default) runs as a sidecar, keeping network
+traffic within the cluster. mitmproxy runs in an interactive terminal mode for
+real-time packet inspection and modification.
 
 For this example, we target the HTTPS `argocd-server` service:
 
@@ -31,21 +31,31 @@ Establishing port-forward tunnels to service...
 
 Port-Forwards:
 
-  mitmproxy - http://127.0.0.1:2244
-  argocd-server - http://127.0.0.1:4000
+  argocd-server - https://127.0.0.1:4000
 
 ```
 
 ## Connecting to the proxy
 
-As shown above, you can now navigate to `http://127.0.0.1:2244` to
-access the proxy.
+With mitmproxy running as a terminal UI in a tmux session, you can interact with it directly.
 
-Note that you can also use the `--browser` flag with `tap on` to automatically
-open the printed URLs in the default browser. `--browser` implies `--port-forward`.
+To attach to the mitmproxy terminal:
 
-[http://127.0.0.1:2244](http://127.0.0.1:2244)
-<img src='../../img/mitmproxy-web-tap.png' class='img'/>
+```sh
+# Find the pod name (usually the target deployment + kubetap suffix)
+kubectl get pods -n argocd | grep argocd-server
+
+# Attach to the mitmproxy tmux session
+kubectl exec -it <pod-name> -c kubetap -- tmux attach-session -t mitmproxy
+```
+
+Once attached, you can:
+- View live HTTP/HTTPS traffic flowing through the proxy
+- Inspect request/response headers and bodies
+- Modify requests before they reach the target service
+- Navigate using arrow keys, press `?` for help
+
+To detach from tmux without stopping the proxy, press `Ctrl+B` then `D`.
 
 ## Listing active taps
 

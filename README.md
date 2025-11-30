@@ -111,20 +111,26 @@ Kubetap inherits many configuration options from `kubectl`, such as: `--context`
 
 ### Tap On
 
-Deploy a MITMproxy container to tap the target Service, in the case of this example,
-the `grafana` Service's exposed port `443`, which uses HTTPS. This uses the
-`--browser` flag (which implies `--port-forward`) to automatically open the
-proxy and target Service in a browser window.
+Deploy a mitmproxy container to tap the target Service.
 
 ```sh
-$ kubectl tap on grafana -p443 --https --browser
+$ kubectl tap on grafana -p443 --https
 Establishing port-forward tunnels to service...
 
 Port-Forwards:
 
-  mitmproxy - http://127.0.0.1:2244
   grafana - https://127.0.0.1:4000
 
+```
+
+mitmproxy runs in an interactive terminal inside a tmux session. To interact with it:
+
+```sh
+# Attach to the mitmproxy tmux session in the pod
+kubectl exec -it <pod-name> -c kubetap -- tmux attach-session -t mitmproxy
+
+# Navigate with arrow keys, press '?' for help in mitmproxy
+# Press Ctrl+B then D to detach from tmux
 ```
 
 ### Tap Off

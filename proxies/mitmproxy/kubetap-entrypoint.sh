@@ -5,7 +5,13 @@ set -o pipefail
 set -o nounset
 
 # HACK: this fixes permission issues
-cp /home/mitmproxy/config/config.yaml /home/mitmproxy/.mitmproxy/config.yaml
+# Create the .mitmproxy directory if it doesn't exist
+mkdir -p /home/mitmproxy/.mitmproxy
+
+# Only copy the config file if it exists
+if [ -f /home/mitmproxy/config/config.yaml ]; then
+  cp /home/mitmproxy/config/config.yaml /home/mitmproxy/.mitmproxy/config.yaml
+fi
 
 prog=${1}
 if [[ ${1} == 'mitmdump' || ${1} == 'mitmproxy' || ${1} == 'mitmweb' ]]; then

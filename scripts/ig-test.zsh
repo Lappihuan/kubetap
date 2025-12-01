@@ -1,7 +1,21 @@
 #!/usr/bin/env zsh
 
 script_dir=${0:A:h}
-#source ${script_dir}/_pre.zsh
+source ${script_dir}/_pre.zsh
+
+#
+# Build and install mittens plugin
+#
+echo "Building and installing mittens plugin..."
+go install -v -trimpath -ldflags="-s -w" ./cmd/kubectl-mittens
+if [[ $? -ne 0 ]]; then
+  echo "Failed to build mittens plugin"
+  return 1
+fi
+
+# Ensure Go bin is in PATH
+export PATH="$(go env GOPATH)/bin:${PATH}"
+echo "PATH set to include Go bin: $(go env GOPATH)/bin"
 
 #
 # Prep env

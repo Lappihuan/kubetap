@@ -182,7 +182,6 @@ func NewTapCommand(client kubernetes.Interface, _ *rest.Config, viper *viper.Vip
 		namespace := viper.GetString("namespace")
 		image := viper.GetString("proxyImage")
 		https := viper.GetBool("https")
-		portForward := viper.GetBool("portForward")
 
 		commandArgs := strings.Fields(viper.GetString("commandArgs"))
 		if targetSvcPort == 0 {
@@ -334,25 +333,22 @@ func NewTapCommand(client kubernetes.Interface, _ *rest.Config, viper *viper.Vip
 			return err
 		}
 
-		if !portForward {
-			_, _ = fmt.Fprintln(cmd.OutOrStdout())
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Port %d of Service %q has been tapped!\n\n", targetSvcPort, targetSvcName)
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "To access the mitmproxy interactive terminal, attach to the kubetap sidecar:\n\n")
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  kubectl exec -it <pod-name> -c kubetap -- tmux attach-session -t mitmproxy\n\n")
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "If the Service is not publicly exposed through an Ingress,\n")
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "you can access it with the following command:\n\n")
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  kubectl port-forward svc/%s -n %s 4000:%d\n\n", targetSvcName, namespace, targetSvcPort)
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "In the future, you can run with --port-forward to automate this process.\n")
+		_, _ = fmt.Fprintln(cmd.OutOrStdout())
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Port %d of Service %q has been tapped!\n", targetSvcPort, targetSvcName)
+
+		// Only wait for pod and exec when explicitly requested by running from a terminal
+		// Check if stdout is going to a terminal (not pipes/redirects)
+		outFile, isTerminal := cmd.OutOrStdout().(*os.File)
+		if !isTerminal || outFile == nil {
+			// Output is redirected or in a test, skip the waiting/exec
 			return nil
 		}
 
-		// We're now in an interactive state
-		stopCh := make(chan struct{})
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "\nWaiting for pod to start...\n\n")
 		ic := make(chan os.Signal, 1)
 		signal.Notify(ic, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 		go func() {
 			<-ic
-			close(stopCh)
 			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "")
 			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Stopping kubetap...")
 			_ = NewUntapCommand(client, viper)(cmd, args)
@@ -385,6 +381,17 @@ func NewTapCommand(client kubernetes.Interface, _ *rest.Config, viper *viper.Vip
 			if ready {
 				_ = bar.Finish()
 				break
+			}
+			// Check if context was cancelled (e.g., in tests)
+			if cmd.Context() != nil {
+				select {
+				case <-cmd.Context().Done():
+					_, _ = fmt.Fprintln(cmd.OutOrStdout(), "")
+					_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Context cancelled. Stopping kubetap...")
+					_ = NewUntapCommand(client, viper)(cmd, args)
+					return cmd.Context().Err()
+				default:
+				}
 			}
 			time.Sleep(1 * time.Second)
 			select {

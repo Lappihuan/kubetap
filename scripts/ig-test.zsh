@@ -96,8 +96,9 @@ for chart in ${_mittens_helm_charts[@]}; do
   _ready=0
   for ((i=0; i<40; i++)); do
     # Get pods for this specific service and check if they have mittens container and are ready
-    _pod_status=$(kubectl get pods --context kind-mittens -l "app.kubernetes.io/instance=${_mittens_helm}" -o jsonpath="{.items[*].status.conditions[?(@.type=='Ready')].status}" 2>/dev/null)
-    _mittens_pods=$(kubectl get pods --context kind-mittens -l "app.kubernetes.io/instance=${_mittens_helm}" -o jsonpath="{.items[*].spec.containers[*].name}" 2>/dev/null)
+    # Use app.kubernetes.io/name label which podinfo sets
+    _pod_status=$(kubectl get pods --context kind-mittens -l "app.kubernetes.io/name=${_mittens_service}" -o jsonpath="{.items[*].status.conditions[?(@.type=='Ready')].status}" 2>/dev/null)
+    _mittens_pods=$(kubectl get pods --context kind-mittens -l "app.kubernetes.io/name=${_mittens_service}" -o jsonpath="{.items[*].spec.containers[*].name}" 2>/dev/null)
     
     if [[ ${_pod_status} == *"True"* ]] && [[ ${_mittens_pods} == *"mittens"* ]]; then
       _ready=1

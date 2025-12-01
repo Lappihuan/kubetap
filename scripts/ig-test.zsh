@@ -88,11 +88,11 @@ for chart in ${_mittens_helm_charts[@]}; do
   # Use timeout and pipe input to avoid waiting for interactive prompt
   # This will cause mittens to fail after pod is ready (expected in CI)
   _mittens_output=$(timeout 45 bash -c "echo '' | kubectl mittens ${_mittens_service} -p${_mittens_port} --context kind-mittens" 2>&1)
-  _mittens_exit_code=$?
   
   # Check if mittens successfully set up the proxy (pod should be ready)
-  # We expect exit code 1 in CI since kubectl exec -it will fail without a real terminal
-  if [[ ${_mittens_output} == *"Pod ready!"* ]]; then
+  # We expect the command to fail (exit code 1) in CI since kubectl exec -it needs a real terminal
+  # but we should see "Pod ready!" in the output (pterm formats it with SUCCESS prefix)
+  if [[ ${_mittens_output} == *"Pod ready"* ]] || [[ ${_mittens_output} == *"SUCCESS"* ]]; then
     echo "✓ Mittens proxy setup successful for ${_mittens_service}"
   else
     echo "✗ Mittens failed to set up proxy for ${_mittens_service}"

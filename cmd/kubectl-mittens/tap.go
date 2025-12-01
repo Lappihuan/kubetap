@@ -403,7 +403,7 @@ func NewTapCommand(client kubernetes.Interface, _ *rest.Config, viper *viper.Vip
 
 		// User has exited the tmux session, clean up the tap
 		_, _ = fmt.Fprintln(cmd.OutOrStdout(), "")
-		_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Cleaning up tap...")
+		_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Cleaning up litter...")
 		untapErr := NewUntapCommand(client, viper)(cmd, args)
 		if untapErr != nil {
 			return untapErr

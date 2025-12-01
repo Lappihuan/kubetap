@@ -24,7 +24,8 @@ import (
 type Spinner struct {
 	spinner *pterm.SpinnerPrinter
 	done    chan bool
-	mu      sync.RWMutex
+	mu      sync.Mutex
+	stopped bool
 }
 
 // NewSpinner creates a new spinner with the given message.
@@ -35,7 +36,8 @@ func NewSpinner(message string) *Spinner {
 	return &Spinner{
 		spinner: spinner,
 		done:    make(chan bool, 1),
-		mu:      sync.RWMutex{},
+		mu:      sync.Mutex{},
+		stopped: false,
 	}
 }
 
@@ -44,12 +46,13 @@ func (s *Spinner) Stop(message string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.spinner != nil {
+	if s.spinner != nil && !s.stopped {
 		_ = s.spinner.Stop()
 		// Give the spinner goroutine time to fully stop
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 		pterm.Success.Println(message)
 		s.spinner = nil
+		s.stopped = true
 	}
 }
 
@@ -58,22 +61,25 @@ func (s *Spinner) Fail(message string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.spinner != nil {
+	if s.spinner != nil && !s.stopped {
 		_ = s.spinner.Stop()
 		// Give the spinner goroutine time to fully stop
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 		pterm.Error.Println(message)
 		s.spinner = nil
+		s.stopped = true
 	}
 }
 
 // Update updates the spinner text.
 func (s *Spinner) Update(message string) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	if s.spinner != nil {
+	if s.spinner != nil && !s.stopped {
 		s.spinner.UpdateText(message)
+		// Give pterm time to process the update
+		time.Sleep(5 * time.Millisecond)
 	}
 }
 

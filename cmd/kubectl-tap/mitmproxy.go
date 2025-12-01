@@ -34,6 +34,7 @@ var (
 	mitmproxyConfigFile  = "config.yaml"
 	mitmproxyBaseConfig  = `listen_port: 7777
 ssl_insecure: true
+keep_host_header: true
 `
 )
 

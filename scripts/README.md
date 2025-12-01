@@ -11,7 +11,6 @@ package.
 | Script                | Purpose                                                             |
 | ---                   | ---                                                                 |
 | `build.zsh`           | meta build script, excluding container builds and integration tests |
-| `build-mitmproxy.zsh` | builds the mitmproxy container                                      |
 | `build-mittens.zsh`   | builds the kubectl-mittens binary                                   |
 | `test.zsh`            | unit tests                                                          |
 | `ig-test.zsh`         | integration tests                                                   |

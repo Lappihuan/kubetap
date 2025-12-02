@@ -60,9 +60,38 @@ plugins:
       - $NAMESPACE
 ```
 
+## GitOps Integration (ArgoCD/Flux)
+
+When using mittens with GitOps tools, Service port modifications may be reconciled back to the desired state. mittens handles this automatically for Flux. For ArgoCD, manual configuration is required.
+
+### Flux
+
+mittens automatically adds `helm.toolkit.fluxcd.io/driftDetection: disabled` annotation to tapped Services, preventing drift detection from rolling back changes. No configuration needed.
+
+### ArgoCD
+
+Add `ignoreDifferences` to your Application to prevent auto-sync from reverting the port changes:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app
+spec:
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      name: my-service
+      namespace: default
+      jsonPointers:
+        - /spec/ports/0/targetPort
+```
+
 ## License
 
 Apache 2.0. See [LICENSE](LICENSE).
+
+Mittens is a fork of [kubetap](https://github.com/soluble-ai/kubetap) by Soluble Inc.
 
 [shield-build-status]: https://github.com/Lappihuan/mittens/workflows/build/badge.svg?branch=master
 [shield-latest-release]: https://img.shields.io/github/v/release/Lappihuan/mittens?include_prereleases&label=release&sort=semver

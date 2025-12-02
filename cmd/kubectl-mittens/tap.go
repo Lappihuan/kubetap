@@ -51,6 +51,10 @@ const (
 	interactiveTimeoutSeconds = 90
 	configMapAnnotationPrefix = "target-"
 
+	// Flux drift detection annotation to prevent automatic rollback of Service mutations
+	fluxDriftDetectionAnnotation = "helm.toolkit.fluxcd.io/driftDetection"
+	fluxDriftDetectionDisabled   = "disabled"
+
 	protocolHTTP Protocol = "http"
 	protocolTCP  Protocol = "tcp"
 	protocolUDP  Protocol = "udp"
@@ -581,6 +585,8 @@ func tapSvc(svcClient corev1.ServiceInterface, svcName string, targetPort int32)
 		}
 
 		anns[annotationOriginalTargetPort] = targetSvcPort.TargetPort.String()
+		// Add Flux drift detection annotation to prevent automatic rollback
+		anns[fluxDriftDetectionAnnotation] = fluxDriftDetectionDisabled
 		svc.SetAnnotations(anns)
 
 		// then do the swap and build a new ports list
@@ -631,6 +637,7 @@ func untapSvc(svcClient corev1.ServiceInterface, svcName string) error {
 		anns := svc.GetAnnotations()
 		newAnns := make(map[string]string)
 		for k, v := range anns {
+			// Remove mittens annotation but preserve Flux drift detection annotation
 			if k != annotationOriginalTargetPort {
 				newAnns[k] = v
 			}

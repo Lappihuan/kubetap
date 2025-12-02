@@ -1,5 +1,9 @@
-# Mittens
 
+<div align="center">
+  <img src="img/logo.png" alt="mittens" width="600" />
+</div>
+
+# mittens
 A kubectl plugin for intercepting HTTP traffic to Kubernetes Services using mitmproxy.
 
 [![Build status][shield-build-status]][build-status]
@@ -91,7 +95,7 @@ spec:
 
 Apache 2.0. See [LICENSE](LICENSE).
 
-Mittens is a fork of [kubetap](https://github.com/soluble-ai/kubetap) by Soluble Inc.
+mittens is a fork of [kubetap](https://github.com/soluble-ai/kubetap) by Soluble Inc.
 
 [shield-build-status]: https://github.com/Lappihuan/mittens/workflows/build/badge.svg?branch=master
 [shield-latest-release]: https://img.shields.io/github/v/release/Lappihuan/mittens?include_prereleases&label=release&sort=semver

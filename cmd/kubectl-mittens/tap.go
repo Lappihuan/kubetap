@@ -51,7 +51,7 @@ const (
 	interactiveTimeoutSeconds = 90
 	configMapAnnotationPrefix = "target-"
 
-	// Flux drift detection annotation to prevent automatic rollback of Service mutations
+	// Flux drift detection annotation to prevent automatic rollback of Service mutations.
 	fluxDriftDetectionAnnotation = "helm.toolkit.fluxcd.io/driftDetection"
 	fluxDriftDetectionDisabled   = "disabled"
 

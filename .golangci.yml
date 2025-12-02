@@ -1,16 +1,34 @@
+version: "2"
+
 run:
   tests: false
-  timeout: 5m
-  skip-dirs:
-    - hack
-    - proxies
+
 linters:
-  enable-all: true
+  default: all
   disable:
     - wsl
     - lll
     - funlen
     - godox
-    - gomnd
+    - mnd
     - gocognit
-    - goerr113
+    - err113
+    - gochecknoglobals
+    - nlreturn
+    - wrapcheck
+    - cyclop
+    - depguard
+    - exhaustruct
+    - wsl_v5
+    - varnamelen
+    - godoclint
+    - noinlineerr
+    - inamedparam
+    - ireturn
+    - maintidx
+    - gosec
+  exclusions:
+    paths:
+      - hack
+      - proxies
+

@@ -28,17 +28,9 @@ ig-test: zsh
 lint: zsh
 	./scripts/lint.zsh
 
-.PHONY: images
-images: zsh
-	./scripts/images.zsh
-
-.PHONY: docs-build
-docs-build: zsh
-	./scripts/docs-build.zsh
-
-.PHONY: docs
-docs: zsh
-	./scripts/docs-serve.zsh
+.PHONY: deps
+deps: zsh
+	./scripts/deps.sh
 
 .PHONY: zsh
 zsh:
